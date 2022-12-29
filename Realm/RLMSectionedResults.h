@@ -345,7 +345,7 @@ RLM_HEADER_AUDIT_BEGIN(nullability, sendability)
 @end
 
 /// An RLMSection contains the objects which belong to a specified section key.
-@interface RLMSection<RLMKeyType: id<RLMValue>, RLMObjectType> : NSObject<RLMSectionedResult>
+@interface RLMSection<RLMKeyType: id<RLMValue>, RLMObjectType> : NSObject<RLMSectionedResult, NSFastEnumeration>
 /// The value that represents the key in this section.
 @property (nonatomic, readonly) RLMKeyType key;
 /// The count of objects in the section.
