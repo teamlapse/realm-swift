@@ -27,6 +27,7 @@ import RealmSyncTestSupport
 #endif
 
 @available(OSX 11, *)
+@MainActor
 class SwiftUIServerTests: SwiftSyncTestCase {
 
     // Configuration for tests
@@ -36,6 +37,7 @@ class SwiftUIServerTests: SwiftSyncTestCase {
         return userConfiguration
     }
 
+    @MainActor // for Xcode 13; 14 inherits it properly from the class
     override func tearDown() {
         cancellables.forEach { $0.cancel() }
         cancellables = []
@@ -45,12 +47,14 @@ class SwiftUIServerTests: SwiftSyncTestCase {
     var cancellables: Set<AnyCancellable> = []
 
     // MARK: - AsyncOpen
-    func asyncOpen<T: BSON>(user: User, appId: String? = nil, partitionValue: T, timeout: UInt? = nil, handler: @escaping (AsyncOpenState) -> Void) {
+    func asyncOpen<T: BSON>(user: User, appId: String? = nil, partitionValue: T, timeout: UInt? = nil,
+                            handler: @escaping (AsyncOpenState) -> Void) {
         let configuration = self.configuration(user: user, partition: partitionValue)
         let asyncOpen = AsyncOpen(appId: appId,
                                   partitionValue: partitionValue,
                                   configuration: configuration,
                                   timeout: timeout)
+        _ = asyncOpen.wrappedValue // Retrieving the wrappedValue to simulate a SwiftUI environment where this is called when initialising the view.
         asyncOpen.projectedValue
             .sink(receiveValue: handler)
             .store(in: &cancellables)
@@ -127,6 +131,7 @@ class SwiftUIServerTests: SwiftSyncTestCase {
         proxy.stop()
     }
 
+    @MainActor
     func testAsyncOpenProgressNotification() throws {
         let user = try logInUser(for: basicCredentials())
         if !isParent {
@@ -286,6 +291,7 @@ class SwiftUIServerTests: SwiftSyncTestCase {
                                 partitionValue: partitionValue,
                                 configuration: configuration,
                                 timeout: timeout)
+        _ = autoOpen.wrappedValue // Retrieving the wrappedValue to simulate a SwiftUI environment where this is called when initialising the view.
         autoOpen.projectedValue
             .sink(receiveValue: handler)
             .store(in: &cancellables)
@@ -324,6 +330,7 @@ class SwiftUIServerTests: SwiftSyncTestCase {
         }
     }
 
+    @MainActor
     func testAutoOpenWaitingForUserWithoutUserLoggedIn() throws {
         let user = try logInUser(for: basicCredentials())
         user.logOut { _ in } // Logout current user
@@ -399,6 +406,8 @@ class SwiftUIServerTests: SwiftSyncTestCase {
         proxy.dropConnections = true
         let ex = expectation(description: "download-realm-flexible-auto-open-no-connection")
         let autoOpen = AutoOpen(appId: flexibleSyncAppId, configuration: configuration, timeout: 1000)
+
+        _ = autoOpen.wrappedValue // Retrieving the wrappedValue to simulate a SwiftUI environment where this is called when initialising the view.
         autoOpen.projectedValue
             .sink { autoOpenState in
                 if case let .open(realm) = autoOpenState {
@@ -457,6 +466,7 @@ class SwiftUIServerTests: SwiftSyncTestCase {
                      reason: "Cannot AsyncOpen the Realm because no appId was found. You must either explicitly pass an appId or initialize an App before displaying your View.")
     }
 
+    @MainActor
     func testAutoOpenThrowExceptionWithMoreThanOneCachedApp() throws {
         _ = App(id: "fake 1")
         _ = App(id: "fake 2")
@@ -464,6 +474,7 @@ class SwiftUIServerTests: SwiftSyncTestCase {
                      reason: "Cannot AsyncOpen the Realm because more than one appId was found. When using multiple Apps you must explicitly pass an appId to indicate which to use.")
     }
 
+    @MainActor
     func testAutoOpenWithMultiUserApp() throws {
         let partitionValueA = #function
         let partitionValueB = "\(#function)bar"
