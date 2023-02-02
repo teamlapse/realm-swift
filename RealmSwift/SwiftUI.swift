@@ -474,7 +474,7 @@ extension Projection: _ObservedResultsValue { }
 ///
 /// Given `@ObservedResults var v` in SwiftUI, `$v` refers to a `BoundCollection`.
 ///
-@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+@available(iOS 14.0, macOS 11.0, tvOS 13.0, watchOS 6.0, *)
 @propertyWrapper public struct ObservedResults<ResultType>: DynamicProperty, BoundCollection where ResultType: _ObservedResultsValue & RealmFetchable & KeypathSortable & Identifiable {
     public typealias Element = ResultType
     private class Storage: ObservableResultsStorage<Results<ResultType>> {
@@ -495,7 +495,7 @@ extension Projection: _ObservedResultsValue { }
     }
 
     @Environment(\.realmConfiguration) var configuration
-    @ObservedObject private var storage: Storage
+    @StateObject private var storage: Storage
     fileprivate func searchText<T: ObjectBase>(_ text: String, on keyPath: KeyPath<T, String>) {
         storage.searchText(text, on: keyPath)
     }
@@ -549,7 +549,7 @@ extension Projection: _ObservedResultsValue { }
                                         keyPaths: [String]? = nil,
                                         sortDescriptor: SortDescriptor? = nil) where ResultType: Projection<ObjectType>, ObjectType: ThreadConfined {
         let results = Results<ResultType>(RLMResults<ResultType>.emptyDetached())
-        self.storage = Storage(results, keyPaths)
+        self._storage = .init(wrappedValue: Storage(results, keyPaths))
         self.storage.configuration = configuration
         self.filter = filter
         self.sortDescriptor = sortDescriptor
@@ -572,7 +572,7 @@ extension Projection: _ObservedResultsValue { }
                 filter: NSPredicate? = nil,
                 keyPaths: [String]? = nil,
                 sortDescriptor: SortDescriptor? = nil) where ResultType: Object {
-        self.storage = Storage(Results(RLMResults<ResultType>.emptyDetached()), keyPaths)
+        self._storage = .init(wrappedValue: Storage(Results(RLMResults<ResultType>.emptyDetached()), keyPaths))
         self.storage.configuration = configuration
         self.filter = filter
         self.sortDescriptor = sortDescriptor
@@ -595,7 +595,7 @@ extension Projection: _ObservedResultsValue { }
                 where: ((Query<ResultType>) -> Query<Bool>)? = nil,
                 keyPaths: [String]? = nil,
                 sortDescriptor: SortDescriptor? = nil) where ResultType: Object {
-        self.storage = Storage(Results(RLMResults<ResultType>.emptyDetached()), keyPaths)
+        self._storage = .init(wrappedValue: Storage(Results(RLMResults<ResultType>.emptyDetached()), keyPaths))
         self.storage.configuration = configuration
         self.where = `where`
         self.sortDescriptor = sortDescriptor
@@ -605,7 +605,7 @@ extension Projection: _ObservedResultsValue { }
                 keyPaths: [String]? = nil,
                 configuration: Realm.Configuration? = nil,
                 sortDescriptor: SortDescriptor? = nil) where ResultType: Object {
-        self.storage = Storage(Results(RLMResults<ResultType>.emptyDetached()), keyPaths)
+        self._storage = .init(wrappedValue: Storage(Results(RLMResults<ResultType>.emptyDetached()), keyPaths))
         self.storage.configuration = configuration
         self.sortDescriptor = sortDescriptor
     }
